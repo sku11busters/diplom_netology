@@ -1,0 +1,46 @@
+version: 1.0.{build}
+
+# Операционная система
+image: Ubuntu2204
+
+# Установка Node.js
+install:
+  - sh: |
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install 20
+      nvm use 20
+      node --version
+  - yarn install --legacy-peer-deps
+
+# Сборка проекта
+build_script:
+  - DISABLE_ESLINT_PLUGIN=true yarn build
+
+# Развертывание на GitHub Pages
+deploy_script:
+  - sh: |
+      branch="gh-pages"
+      repoUrl="https://github.com/sku11busters/diplom_netology.git"
+      commitMessage="Deploy to GitHub Pages via AppVeyor"
+
+      # Клонируем ветку gh-pages
+      git clone --quiet --branch=$branch $repoUrl temp-gh-pages
+
+      # Копируем собранные файлы
+      cp -r build/* temp-gh-pages/
+
+      # Переходим в папку gh-pages
+      cd temp-gh-pages
+
+      # Добавляем изменения
+      git config --global user.email "appveyor@example.com"
+      git config --global user.name "AppVeyor"
+      git add .
+      git commit -m "$commitMessage"
+      git push origin $branch
+
+      # Удаляем временную папку
+      cd ..
+      rm -rf temp-gh-pages
